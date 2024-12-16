@@ -1,0 +1,38 @@
+#app{
+    background-image: url(./assets/bgImage.jpg);
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center center;
+    background-origin:padding-box ;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+.transparentBg{
+    background-color: rgba(255, 255, 255, 0.679);
+}
+#courses div{
+    background-color: rgba(255, 255, 255, 0.679) !important;
+    padding: 20px 5px;
+}
+#courses div:hover{
+    cursor: pointer;
+    transform: translateY(10px);
+    transition: all 1s;
+}
+.taskMainDiv{
+    background-image: url(./assets/bgImge2.jpg);
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center center;
+    /* background-origin:padding-box ; */
+    /* height: 100vh; */
+    background-color: rgba(0, 0, 0, 0.5);
+}
+#tasks-container div{
+    background-color: rgba(255, 254, 254, 0.617);
+}
+#tasks-container div:hover{
+    cursor: pointer;
+    transform: translateY(10px);
+    transition: all 1s;
+}

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LMS System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body class="bg-gray-100">
+
+    <!-- Navbar (hidden initially) -->
+    <nav id="navbar" class="bg-blue-600 p-4 shadow-md flex justify-between items-center text-white hidden">
+        <div class="flex items-center space-x-6">
+            <h1 class="text-2xl font-bold">LMS System</h1>
+            <div class="space-x-4 hidden md:flex">
+                <button id="tasks-btn" class="relative">
+                    <i class="fas fa-tasks"></i> Tasks
+                    <span id="task-notification" class="absolute top-0 right-0 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hidden">!</span>
+                </button>
+                <button class="relative">
+                    <i class="fas fa-comments"></i> Messages
+                    <span id="messages-notification" class="absolute top-0 right-0 bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">!</span>
+                </button>
+            </div>
+        </div>
+        <button id="logout-btn" class="bg-red-500 text-white py-2 px-4 rounded-full">
+            Logout
+        </button>
+    </nav>
+
+    <!-- Main Content -->
+    <div id="app" class="p-6">
+        <!-- Login Section (Visible by default) -->
+        <div id="login-section" class="transparentBg max-w-md mx-auto p-6 rounded-lg shadow-lg mt-6">
+            <h2 class="text-3xl font-semibold text-gray-700 mb-2 text-center">Login</h2>
+            <p class="text-md text-slate-700 text-center mb-4">Welcome to the LMS system</p>
+            <div>
+                <input id="username" type="text" placeholder="Username" class="w-full mb-4 p-2 border rounded shadow-sm transparentBg">
+                <input id="password" type="password" placeholder="Password" class="w-full mb-4 p-2 border rounded shadow-sm transparentBg">
+                <button id="login-btn" class="w-full bg-blue-500 text-white py-2 rounded-full shadow-lg hover:bg-white hover:text-blue-600 transition duration-300">
+                    Login
+                </button>
+            </div>
+        </div>
+
+        <!-- Courses Section (Hidden initially) -->
+        <div id="main-content" class="hidden">
+            <h2 class="text-3xl font-semibold text-slate-100 mb-6">Dashboard</h2>
+
+            <!-- Search Section -->
+            <div class="flex items-center mb-6">
+                <select id="search-filter" class="border p-2 rounded shadow-sm transparentBg">
+                    <option class="transparentBg" value="name">Search by Name</option>
+                    <option value="id">Search by Course ID</option>
+                    <option value="pending">Pending Courses</option>
+                </select>
+                <input id="search-bar" type="text" placeholder="Search..." class="border p-2 ml-4 rounded w-full shadow-sm transparentBg placeholder:text-slate-900">
+            </div>
+
+            <!-- Courses Section -->
+            <div id="courses" class="grid grid-cols-1 lg:grid-cols-2 md:grid-cols-3 gap-6">
+                <!-- Courses will be dynamically inserted here -->
+            </div>
+
+            <!-- Add Course Section -->
+            <button id="add-course-btn" class="bg-green-500 text-white py-2 px-4 rounded mt-6 shadow-lg hover:bg-green-600 transition duration-300">
+                Add Course
+            </button>
+        </div>
+    </div>
+
+    <!-- Add Course Modal -->
+    <div id="add-course-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center">
+        <div class="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
+            <h3 class="text-xl font-bold mb-4">Add New Course</h3>
+            <input id="new-course-id" type="text" placeholder="Course ID" class="w-full mb-4 p-2 border rounded shadow-sm">
+            <input id="new-course-name" type="text" placeholder="Course Name" class="w-full mb-4 p-2 border rounded shadow-sm">
+            <button id="save-course-btn" class="bg-blue-500 text-white py-2 px-4 rounded-full shadow-lg hover:bg-blue-600 transition duration-300">Save</button>
+            <button id="close-modal-btn" class="bg-red-500 text-white py-2 px-4 rounded-full ml-4 shadow-lg hover:bg-red-600 transition duration-300">Cancel</button>
+        </div>
+    </div>
+
+    <script>
+        // User and Course Data
+        const users = [
+            { username: 'student1', password: 'pass1', pendingCourses: ['101', '102'] },
+        ];
+
+        const courses = [
+            { id: '101', name: 'Programming Fundamentals' },
+            { id: '102', name: 'Calculus' },
+            { id: '103', name: 'History' },
+            { id: '002', name: 'Multi-varite calculus' },
+        ];
+
+        // DOM Elements
+        const loginSection = document.getElementById('login-section');
+        const navbar = document.getElementById('navbar');
+        const mainContent = document.getElementById('main-content');
+        const loginBtn = document.getElementById('login-btn');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        const coursesContainer = document.getElementById('courses');
+        const searchBar = document.getElementById('search-bar');
+        const searchFilter = document.getElementById('search-filter');
+        const addCourseBtn = document.getElementById('add-course-btn');
+        const addCourseModal = document.getElementById('add-course-modal');
+        const saveCourseBtn = document.getElementById('save-course-btn');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const newCourseIdInput = document.getElementById('new-course-id');
+        const newCourseNameInput = document.getElementById('new-course-name');
+        const logoutBtn = document.getElementById('logout-btn');
+        const tasksBtn = document.getElementById('tasks-btn');
+        const taskNotification = document.getElementById('task-notification');
+        const messagesNotification = document.getElementById('messages-notification');
+
+        // Functions
+        function renderCourses(filter = null, query = '') {
+            coursesContainer.innerHTML = '';
+            let filteredCourses = courses;
+
+            if (filter === 'id') {
+                filteredCourses = courses.filter(course => course.id.includes(query));
+            } else if (filter === 'name') {
+                filteredCourses = courses.filter(course => course.name.toLowerCase().includes(query.toLowerCase()));
+            } else if (filter === 'pending') {
+                const user = users.find(user => user.username === usernameInput.value);
+                if (user) {
+                    filteredCourses = courses.filter(course => user.pendingCourses.includes(course.id));
+                }
+            }
+
+            filteredCourses.forEach(course => {
+                const courseCard = document.createElement('div');
+                courseCard.className = 'bg-white p-4 rounded shadow-lg hover:shadow-xl transition-shadow duration-300';
+                courseCard.innerHTML = `<h4 class="font-semibold text-gray-800">${course.name}</h4><p class="text-gray-600">Course ID: ${course.id}</p>`;
+                coursesContainer.appendChild(courseCard);
+            });
+        }
+
+        function checkTasks() {
+            if (tasks.length > 0) {
+                taskNotification.classList.remove('hidden');
+            } else {
+                taskNotification.classList.add('hidden');
+            }
+        }
+
+        function checkMessages() {
+            // Add logic for checking unread messages here (this is just a placeholder)
+            messagesNotification.classList.remove('hidden');
+        }
+
+        // Event Listeners
+        loginBtn.addEventListener('click', () => {
+            const username = usernameInput.value;
+            const password = passwordInput.value;
+
+            if (users.some(user => user.username === username && user.password === password)) {
+                loginSection.classList.add('hidden');
+                navbar.classList.remove('hidden');
+                mainContent.classList.remove('hidden');
+                renderCourses();
+                checkTasks();
+                checkMessages();
+            } else {
+                alert('Invalid login credentials');
+            }
+        });
+
+        searchBar.addEventListener('input', () => {
+            renderCourses(searchFilter.value, searchBar.value);
+        });
+
+        addCourseBtn.addEventListener('click', () => {
+            addCourseModal.classList.remove('hidden');
+        });
+
+        closeModalBtn.addEventListener('click', () => {
+            addCourseModal.classList.add('hidden');
+        });
+
+        saveCourseBtn.addEventListener('click', () => {
+            const newCourseId = newCourseIdInput.value;
+            const newCourseName = newCourseNameInput.value;
+
+            if (newCourseId && newCourseName) {
+                courses.push({ id: newCourseId, name: newCourseName });
+                renderCourses();
+                addCourseModal.classList.add('hidden');
+                newCourseIdInput.value = '';
+                newCourseNameInput.value = '';
+            } else {
+                alert('Please fill in all fields');
+            }
+        });
+
+        logoutBtn.addEventListener('click', () => {
+            mainContent.classList.add('hidden');
+            navbar.classList.add('hidden');
+            loginSection.classList.remove('hidden');
+        });
+
+        tasksBtn.addEventListener('click', () => {
+            // Redirect to tasks.html
+            window.location.href = 'tasks.html';
+        });
+    </script>
+</body>
+</html>
